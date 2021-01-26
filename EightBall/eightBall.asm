@@ -53,7 +53,7 @@ ReadString proto
 
 	;Output message to ask for question:
 	mov rdx, offset prompt2
-	call WriteString
+	call WriteString;why does she call WriteString but not me :'(
 	call Crlf
 	call ReadString						;user input does not matter and is ignored
 	call Crlf

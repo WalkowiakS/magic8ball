@@ -1,0 +1,2 @@
+C:\Users\swalk\OneDrive\Desktop\64 bit assembly\EightBall\x64\Debug\Project.exe
+C:\Users\swalk\OneDrive\Desktop\64 bit assembly\EightBall\x64\Debug\Project.pdb

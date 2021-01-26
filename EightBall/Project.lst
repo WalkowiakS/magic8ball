@@ -1,0 +1,225 @@
+Microsoft (R) Macro Assembler (x64) Version 14.25.28614.0   05/07/20 17:37:42
+eightBall.asm						     Page 1 - 1
+
+
+				; YOUR NAME HERE
+				; Magic 8 ball emulator
+				; Calling a subroutine in 64-bit mode    (eightBall.asm)
+
+				 ;Irvine64 Prototypes
+				 ExitProcess proto
+				WriteString PROTO         ; Irvine64 library
+				Crlf PROTO               ; Irvine64 library
+				ReadInt64 proto
+				WriteInt64 proto
+				ReadString proto
+
+				 ;Add appropriate prompts:
+ 00000000			.data
+ 00000000 50 69 63 6B 20		prompt1 byte  "Pick your lucky number:  ", 0
+	   79 6F 75 72 20
+	   6C 75 63 6B 79
+	   20 6E 75 6D 62
+	   65 72 3A 20 20
+	   00
+ 0000001A 57 68 61 74 20		prompt2 byte  "What is your question?  ", 0
+	   69 73 20 79 6F
+	   75 72 20 71 75
+	   65 73 74 69 6F
+	   6E 3F 20 20 00
+ 00000033 4D 61 67 69 63		prompt3 byte  "Magic 8 Ball says:  ", 0
+	   20 38 20 42 61
+	   6C 6C 20 73 61
+	   79 73 3A 20 20
+	   00
+ 00000048				keyVal QWORD ?
+	   0000000000000000
+
+					;magic 8 ball answers. name will correspond to random number
+ 00000050 43 6F 6E 63 65		zero byte "Concentrate and ask again.", 0
+	   6E 74 72 61 74
+	   65 20 61 6E 64
+	   20 61 73 6B 20
+	   61 67 61 69 6E
+	   2E 00
+ 0000006B 49 74 20 69 73		one byte "It is certain.", 0
+	   20 63 65 72 74
+	   61 69 6E 2E 00
+ 0000007A 4F 75 74 6C 6F		two byte "Outlook not so good.", 0
+	   6F 6B 20 6E 6F
+	   74 20 73 6F 20
+	   67 6F 6F 64 2E
+	   00
+ 0000008F 4D 79 20 73 6F		three byte "My sources say no.", 0
+	   75 72 63 65 73
+	   20 73 61 79 20
+	   6E 6F 2E 00
+ 000000A2 44 6F 6E 27 74		four byte "Don't count on it.", 0
+	   20 63 6F 75 6E
+	   74 20 6F 6E 20
+	   69 74 2E 00
+
+					
+ 00000000			.code
+ 00000000			 main PROC
+					;Output message to ask for lucky number:
+ 00000000  48/ BA			mov rdx, offset prompt1
+	   0000000000000000 R
+ 0000000A  E8 00000000 E		call WriteString
+ 0000000F  E8 00000000 E		call Crlf
+
+					;read and store number
+ 00000014  E8 00000000 E		call ReadInt64
+ 00000019  48/ 89 05			mov keyVal, rax
+	   00000048 R
+
+
+					; Determine random number:
+ 00000020  48/ C7 C0			mov rax,  343FDh
+	   000343FD
+ 00000027  48/ F7 2D			imul keyVal
+	   00000048 R
+ 0000002E  48/ 05			add rax, 269EC3h
+	   00269EC3
+ 00000034  48/ C1 C8 08			ror rax, 8		;rotate out lowest digit
+
+
+					; Convert number to the appropriate range:
+ 00000038  48/ C7 C1			mov rcx, 6
+	   00000006
+ 0000003F  48/ F7 F1			div rcx			;RDX = RAX/RCX (remainder between 0 and 5)
+
+ 00000042  48/ 89 15			mov keyVal, rdx	;store number of answer in keyVal
+	   00000048 R
+
+
+					;Output message to ask for question:
+ 00000049  48/ BA			mov rdx, offset prompt2
+	   000000000000001A R
+ 00000053  E8 00000000 E		call WriteString
+ 00000058  E8 00000000 E		call Crlf
+ 0000005D  E8 00000000 E		call ReadString						;user input does not matter and is ignored
+ 00000062  E8 00000000 E		call Crlf
+ 00000067  E8 00000000 E		call Crlf
+
+					;Output message to to answer question:
+ 0000006C  48/ BA			mov rdx, offset prompt3
+	   0000000000000033 R
+ 00000076  E8 00000000 E		call WriteString
+
+					;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+					;Determine result:
+ 0000007B  48/ 8B 05			mov rax, keyVal
+	   00000048 R
+					
+ 00000082  48/ 83 F8 00			cmp rax, 0
+ 00000086  75 0C			jne CASEONE		;rax != 0
+					;case zero		rax == 0
+ 00000088  48/ BA			mov rdx, offset zero		;move answer into rdx to be printed
+	   0000000000000050 R
+ 00000092  EB 40			jmp ANSFOUND				;jump over other paths
+
+ 00000094				CASEONE:
+ 00000094  48/ 83 F8 01			cmp rax, 1
+ 00000098  75 0C			jne CASETWO			;rax != 1
+					;case one		rax == 1
+ 0000009A  48/ BA			mov rdx, offset one
+	   000000000000006B R
+ 000000A4  EB 2E			jmp ANSFOUND
+
+ 000000A6				CASETWO:
+ 000000A6  48/ 83 F8 02			cmp rax, 2
+ 000000AA  75 0C			jne CASETHREE		;rax != 2
+					;case two		rax == 2
+ 000000AC  48/ BA			mov rdx, offset two
+	   000000000000007A R
+ 000000B6  EB 1C			jmp ANSFOUND
+
+ 000000B8				CASETHREE:
+ 000000B8  48/ 83 F8 03			cmp rax, 3
+ 000000BC  75 0C			jne CASEFOUR		;rax != 3
+					;case three		rax == 3
+ 000000BE  48/ BA			mov rdx, offset three
+	   000000000000008F R
+ 000000C8  EB 0A			jmp ANSFOUND
+
+ 000000CA				CASEFOUR:
+ 000000CA  48/ BA			mov rdx, offset four
+	   00000000000000A2 R
+
+ 000000D4				ANSFOUND:
+					;answer is in rdx and ready to be printed
+
+
+					;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+					;Output the message
+ 000000D4  E8 00000000 E		call WriteString			;Output message
+ 000000D9  E8 00000000 E		call Crlf
+
+
+ 000000DE  B9 00000000		 mov  ecx,0				; Process return code
+ 000000E3  E8 00000000 E	 call    ExitProcess
+
+ 000000E8			main ENDP
+				END
+
+				comment $
+
+				~~~~~~~~~~~~~~~~~~~~~~OUTPUT
+				Pick your lucky number:
+				78
+				What is your question?
+				Will I pass CIS 244?
+
+
+				Magic 8 Ball says:  It is certain.
+
+				C:\Users\swalk\Desktop\64 bit assembly\EightBall\x64\Debug\Project.exe (process 17520) exited with code 0.
+				Press any key to close this window . . .
+
+
+
+
+
+
+$
+Microsoft (R) Macro Assembler (x64) Version 14.25.28614.0   05/07/20 17:37:42
+eightBall.asm						     Symbols 2 - 1
+
+
+
+
+Procedures, parameters, and locals:
+
+                N a m e                 Type     Value    Attr
+
+Crlf . . . . . . . . . . . . . .	P 	 00000000 Length= 00000000 External
+ExitProcess  . . . . . . . . . .	P 	 00000000 Length= 00000000 External
+ReadInt64  . . . . . . . . . . .	P 	 00000000 Length= 00000000 External
+ReadString . . . . . . . . . . .	P 	 00000000 Length= 00000000 External
+WriteInt64 . . . . . . . . . . .	P 	 00000000 Length= 00000000 External
+WriteString  . . . . . . . . . .	P 	 00000000 Length= 00000000 External
+main . . . . . . . . . . . . . .	P 	 00000000 _TEXT	Length= 000000E8 Public
+  CASEONE  . . . . . . . . . . .	L 	 00000094 _TEXT	
+  CASETWO  . . . . . . . . . . .	L 	 000000A6 _TEXT	
+  CASETHREE  . . . . . . . . . .	L 	 000000B8 _TEXT	
+  CASEFOUR . . . . . . . . . . .	L 	 000000CA _TEXT	
+  ANSFOUND . . . . . . . . . . .	L 	 000000D4 _TEXT	
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+four . . . . . . . . . . . . . .	Byte	 000000A2 _DATA	
+keyVal . . . . . . . . . . . . .	QWord	 00000048 _DATA	
+one  . . . . . . . . . . . . . .	Byte	 0000006B _DATA	
+prompt1  . . . . . . . . . . . .	Byte	 00000000 _DATA	
+prompt2  . . . . . . . . . . . .	Byte	 0000001A _DATA	
+prompt3  . . . . . . . . . . . .	Byte	 00000033 _DATA	
+three  . . . . . . . . . . . . .	Byte	 0000008F _DATA	
+two  . . . . . . . . . . . . . .	Byte	 0000007A _DATA	
+zero . . . . . . . . . . . . . .	Byte	 00000050 _DATA	
+
+	   0 Warnings
+	   0 Errors
